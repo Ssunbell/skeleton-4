@@ -27,21 +27,18 @@ vLLM은 LLM(Large Language Model) 추론을 위한 고성능 라이브러리로,
 
 ## 사전 요구사항
 
--   **Python**: 3.10 이상
--   **GPU**: CUDA 지원 GPU (최소 8GB VRAM 권장)
--   **RAM**: 최소 16GB
--   **저장공간**: 최소 10GB (모델 다운로드 포함)
--   **운영체제**: Windows 10/11, Linux, macOS
+-   **Python**: 3.13 이상
+-   **GPU**: CUDA 지원 GPU (최소 6GB VRAM 권장)
+-   **RAM**: 최소 8GB
+-   **저장공간**: 최소 20GB (모델 다운로드 포함)
+-   **운영체제**: Linux(Windows는 wsl)
 
 ## 프로젝트 구조
 
 ```text
 .
 ├── vllm.ipynb                      # PagedAttention/KV Cache 개념 학습
-├── vllm_tutorial.ipynb             # vLLM 완벽 가이드 (이론부터 실전까지)
-├── vllm_offline_inference.py       # vLLM 오프라인 추론 메인 스크립트
-├── run_benchmark.py                # 독립 실행형 성능 벤치마크 스크립트
-├── requirements.txt                # 의존 패키지 목록
+├── pyproject.toml                  # 의존 패키지 버전 명시
 └── README.md                       # 프로젝트 문서
 ```
 
@@ -52,25 +49,19 @@ vLLM은 LLM(Large Language Model) 추론을 위한 고성능 라이브러리로,
 1. `cd 커맨드 사용 시, 본인이 압축을 푼 디렉토리로 이동해야 합니다.`
 
 2. uv가 설치되어 있어야 합니다. uv를 설치하는 방법은 아래를 참고하세요.
-
-   **Windows (PowerShell):**
-   ```powershell
-   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-   ```
-
    **Linux/macOS:**
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
-3. `uv pip install -r requirements.txt` 명령어로 라이브러리 설치를 진행합니다.
+3. `uv sync` 명령어로 가상환경을 설치 및 라이브러리 설치를 진행합니다. uv sync 명령어 이후 `.venv` 폴더가 생성된 것을 확인하실 수 있습니다.
 ```bash
-uv pip install -r requirements.txt
+uv sync
 ```
 
 - 만약 이슈가 있다면 아래 명령어를 참고해서 라이브러리 설치를 진행해주세요.
 ```bash
-uv pip install vllm==0.13.0 transformers>=4.40.0 torch>=2.0.0 peft>=0.10.0
+uv add numpy==2.1.0 pandas==2.2.3 peft==0.17.1 torch==2.8.0 transformers==4.56.0 accelerate==1.10.1 datasets==4.0.0 trl==0.22.2 juypter==1.1.1 ipykernel==7.1.0 vllm==0.11.0
 ```
 
 4. `uv run python vllm_offline_inference.py` 명령어 등 uv의 명령어를 사용하는 것이 익숙하지 않을 수 있습니다. 가상환경을 활성화하면 일반적인 `python vllm_offline_inference.py` 명령어로 코드를 동작시킬 수 있습니다.
@@ -102,7 +93,7 @@ uv pip install vllm==0.13.0 transformers>=4.40.0 torch>=2.0.0 peft>=0.10.0
 
 #### 2.1 Jupyter Notebook 실습
 
-학습은 `vllm_tutorial.ipynb` 파일을 이용하여 진행합니다. 각 셀마다 상세한 설명이 포함되어 있으며, 다음 내용을 다룹니다:
+학습은 `vllm.ipynb` 파일을 이용하여 진행합니다. 각 셀마다 상세한 설명이 포함되어 있으며, 다음 내용을 다룹니다:
 
 - **Part 1**: vLLM 기초 개념 (PagedAttention, KV Cache)
 - **Part 1.5**: PagedAttention 시뮬레이터 실습
@@ -113,34 +104,6 @@ uv pip install vllm==0.13.0 transformers>=4.40.0 torch>=2.0.0 peft>=0.10.0
 - **Part 5**: 성능 벤치마크 (Transformers vs vLLM)
 - **Part 6**: 종합 실습 (Text-to-SQL 시스템 구축)
 
-```bash
-# Jupyter Notebook 실행
-jupyter notebook vllm_tutorial.ipynb
-```
-
-#### 2.2 Python 스크립트 실행
-
-##### 방법 1: 대화형 실행 (추천)
-```bash
-python vllm_offline_inference.py
-```
-
-메뉴가 표시되면 원하는 모드를 선택합니다:
-1. Runtime LoRA 방식
-2. Merged Model 방식
-3. 성능 벤치마크
-
-##### 방법 2: 직접 모드 지정
-```bash
-python vllm_offline_inference.py 1  # Runtime LoRA 방식
-python vllm_offline_inference.py 2  # Merged Model 방식
-python vllm_offline_inference.py 3  # 성능 벤치마크
-```
-
-##### 방법 3: 독립 벤치마크 실행
-```bash
-python run_benchmark.py
-```
 
 ### 3. LoRA Adapter 통합 방법
 
@@ -160,7 +123,7 @@ from vllm_offline_inference import VLLMInferenceWithLoRA
 
 inferencer = VLLMInferenceWithLoRA(
     base_model_name="naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B",
-    lora_adapter_path="./lora_adapter",  # LoRA adapter 경로
+    lora_adapter_path="./checkpoint-100",  # LoRA adapter 경로
 )
 
 messages = [
@@ -187,7 +150,7 @@ from vllm_offline_inference import merge_lora_to_base_model, VLLMInferenceWithLo
 # Step 1: LoRA를 base model에 merge (한 번만 실행)
 merged_path = merge_lora_to_base_model(
     base_model_name="naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B",
-    lora_adapter_path="./lora_adapter",
+    lora_adapter_path="./checkpoint-100",
     output_path="./merged_model",
 )
 
@@ -209,13 +172,6 @@ Transformers 라이브러리와 vLLM의 성능을 비교합니다.
 - Peak GPU Memory (최대 GPU 메모리 사용량)
 - Throughput (처리량)
 
-**실행 방법:**
-```bash
-# 메인 스크립트에서 옵션 3 선택
-python vllm_offline_inference.py
-# 또는
-python run_benchmark.py
-```
 
 **예상 결과:**
 - vLLM이 Transformers 대비 **2-5배 빠른 추론 속도**
@@ -243,7 +199,7 @@ python run_benchmark.py
 ```python
 inferencer = VLLMInferenceWithLoRA(
     base_model_name="...",
-    gpu_memory_utilization=0.9,  # GPU 메모리 90% 사용
+    gpu_memory_utilization=0.75,  # GPU 메모리 75% 사용
     tensor_parallel_size=1,      # 단일 GPU
 )
 ```
@@ -252,7 +208,7 @@ inferencer = VLLMInferenceWithLoRA(
 
 ## 문제 해결
 
--   **CUDA 메모리 부족**: `gpu_memory_utilization` 값을 0.7~0.8로 낮추거나, 더 작은 모델을 사용하세요.
+-   **CUDA 메모리 부족**: `gpu_memory_utilization` 값을 낮추거나, 더 작은 모델을 사용하세요.
 
 -   **uv 명령어 인식 안 됨**: uv 설치 후 PowerShell에서 명령어가 인식되지 않는 경우, 다음 방법을 시도해보세요:
     
@@ -279,11 +235,11 @@ inferencer = VLLMInferenceWithLoRA(
     
     5. git bash를 사용할 경우 `curl -LsSf https://astral.sh/uv/install.sh | sh`를 사용해주세요.
 
--   **vLLM 버전 호환성**: vLLM 0.13.0 버전을 사용하세요. 다른 버전에서는 API가 다를 수 있습니다.
+-   **vLLM 버전 호환성**: vLLM 0.11.0 버전을 사용하세요. 다른 버전에서는 API가 다를 수 있습니다.
 
 -   **LoRA adapter 로드 실패**: adapter 폴더 구조를 확인하세요:
     ```
-    lora_adapter/
+    checkpoint-100/
     ├── adapter_config.json
     └── adapter_model.safetensors (또는 .bin)
     ```
