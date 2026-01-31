@@ -28,7 +28,7 @@ vLLM은 LLM(Large Language Model) 추론을 위한 고성능 라이브러리로,
 ## 사전 요구사항
 
 -   **Python**: 3.13 이상
--   **GPU**: CUDA 지원 GPU (최소 6GB VRAM 권장)
+-   **GPU**: CUDA 12.9.1 GPU (최소 6GB VRAM 권장)
 -   **RAM**: 최소 8GB
 -   **저장공간**: 최소 20GB (모델 다운로드 포함)
 -   **운영체제**: Linux(Windows는 wsl)
@@ -46,7 +46,7 @@ vLLM은 LLM(Large Language Model) 추론을 위한 고성능 라이브러리로,
 
 ### 1. 환경 설정
 
-1. `cd 커맨드 사용 시, 본인이 압축을 푼 디렉토리로 이동해야 합니다.`
+1. 윈도우에서 WSL을 설치해야 합니다. 설치 과정이 매우 복잡하므로 [링크](https://www.notion.so/ssunbell/WSL-2ec1806f5bc1804b8648d6b30450613a?source=copy_link)를 참고해서 차근차근 진행해주세요. 
 
 2. uv가 설치되어 있어야 합니다. uv를 설치하는 방법은 아래를 참고하세요.
    **Linux/macOS:**
@@ -66,28 +66,10 @@ uv add numpy==2.1.0 pandas==2.2.3 peft==0.17.1 torch==2.8.0 transformers==4.56.0
 
 4. `uv run python vllm_offline_inference.py` 명령어 등 uv의 명령어를 사용하는 것이 익숙하지 않을 수 있습니다. 가상환경을 활성화하면 일반적인 `python vllm_offline_inference.py` 명령어로 코드를 동작시킬 수 있습니다.
 
-   **Windows에서 가상환경 활성화 방법:**
-   
-   - **PowerShell**:
-   ```powershell
-   .venv\Scripts\Activate.ps1
-   ```
-   또는
-   ```powershell
-   . .venv\Scripts\Activate.ps1
-   ```
-   
-   - **CMD (명령 프롬프트)**:
-   ```cmd
-   .venv\Scripts\activate.bat
-   ```
-   
-   - **Git Bash**:
+   **WSL에서 가상환경 활성화 방법:**
    ```bash
-   source .venv/Scripts/activate
+   source .venv/bin/activate
    ```
-   
-   > **참고**: PowerShell에서 실행 정책 오류가 발생하는 경우, `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` 명령어로 실행 정책을 변경하거나 관리자 권한으로 실행하세요.
 
 ### 2. 학습 및 실습
 
@@ -122,7 +104,7 @@ vLLM이 추론 시점에 LoRA를 동적으로 적용합니다.
 from vllm_offline_inference import VLLMInferenceWithLoRA
 
 inferencer = VLLMInferenceWithLoRA(
-    base_model_name="naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B",
+    base_model_name="HuggingFaceTB/SmolLM2-1.7B-Instruct",
     lora_adapter_path="./checkpoint-100",  # LoRA adapter 경로
 )
 
@@ -149,7 +131,7 @@ from vllm_offline_inference import merge_lora_to_base_model, VLLMInferenceWithLo
 
 # Step 1: LoRA를 base model에 merge (한 번만 실행)
 merged_path = merge_lora_to_base_model(
-    base_model_name="naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B",
+    base_model_name="HuggingFaceTB/SmolLM2-1.7B-Instruct",
     lora_adapter_path="./checkpoint-100",
     output_path="./merged_model",
 )
@@ -210,32 +192,11 @@ inferencer = VLLMInferenceWithLoRA(
 
 -   **CUDA 메모리 부족**: `gpu_memory_utilization` 값을 낮추거나, 더 작은 모델을 사용하세요.
 
--   **uv 명령어 인식 안 됨**: uv 설치 후 PowerShell에서 명령어가 인식되지 않는 경우, 다음 방법을 시도해보세요:
+-   **uv 명령어 인식 안 됨**: ubuntu22.04에서 uv를 설치하세요.:
     
-    1. **현재 세션에서 PATH 새로고침** (PowerShell에서 실행):
-    ```powershell
-    $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
-    ```
-    
-    2. **PATH에 직접 추가** (임시 해결):
-    ```powershell
-    $env:Path += ";$env:USERPROFILE\.local\bin"
-    ```
-    
-    3. **영구적으로 PATH 추가** (관리자 권한 PowerShell):
-    ```powershell
-    $uvPath = "$env:USERPROFILE\.local\bin"
-    $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
-    if ($currentPath -notlike "*$uvPath*") {
-        [Environment]::SetEnvironmentVariable("Path", "$currentPath;$uvPath", "User")
-    }
-    ```
-    
-    4. **PowerShell 재시작**: 위 방법들을 시도한 후 PowerShell을 재시작하면 `uv` 명령어가 정상적으로 작동합니다.
-    
-    5. git bash를 사용할 경우 `curl -LsSf https://astral.sh/uv/install.sh | sh`를 사용해주세요.
+    ubuntu에서 bash를 사용할 경우 `curl -LsSf https://astral.sh/uv/install.sh | sh`를 사용해주세요.
 
--   **vLLM 버전 호환성**: vLLM 0.11.0 버전을 사용하세요. 다른 버전에서는 API가 다를 수 있습니다.
+-   **vLLM 버전 호환성**: vLLM 0.13.0 버전을 사용하세요. 다른 버전에서는 API가 다를 수 있습니다.
 
 -   **LoRA adapter 로드 실패**: adapter 폴더 구조를 확인하세요:
     ```
